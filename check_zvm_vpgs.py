@@ -70,7 +70,7 @@ def check_vpg_statuses(url, session, verify):
 
 def check_alerts(url, session, verify):
     """
-    Return a list of all critical alerts
+    Return a list of all active critical and warning alerts
     """
     warning, critical = [], []
 
@@ -79,7 +79,6 @@ def check_alerts(url, session, verify):
             id = alert['HelpIdentifier']
             description = alert['Description']
             status = alert['Level']
-
             if status == 'Warning':
                 warning.append("{0} - {1}".format(id, description))
             else:
@@ -120,7 +119,6 @@ def main():
                     .format(len(bad), ', '.join(bad)))
                 exit(service_states.critical)
         elif args.mode == 'alerts':
-            #result = get_alert_levels(args.url, session=session, verify=args.verify)
             result = check_alerts(args.url, session=session, verify=args.verify)
             warning, critical = result
             output = ""
