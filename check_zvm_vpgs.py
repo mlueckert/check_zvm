@@ -115,8 +115,8 @@ def main():
                     .format(len(good)))
                 exit(service_states.ok)
             else:
-                print("CRITICAL: {0} VPGs are not meeting SLAs: {1}"
-                    .format(len(bad), ', '.join(bad)))
+                print("CRITICAL: {0} of {1} VPGs are not meeting SLAs: {2}"
+                    .format(len(bad), len(bad)+len(good),', '.join(bad)))
                 exit(service_states.critical)
         elif args.mode == 'alerts':
             result = check_alerts(args.url, session=session, verify=args.verify)
@@ -137,8 +137,9 @@ def main():
             exit(exitcode)
 
     except Exception as e:
-        print(repr(e))
-        exit(service_states.unknown)
+        exitcode = service_states.critical
+        print("{0}: {1}".format(service_states(exitcode).name.upper(), repr(e)))
+        exit(exitcode)
 
 if __name__ == '__main__':
     main()
