@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Plugin to check Zerto Alerts and VPGs"""
 
 from sys import exit
@@ -68,14 +68,14 @@ def check_vpg_statuses(url, session, verify):
 
     return good, bad
 
-def check_alerts(url, session, verify):
+def check_alerts(url, session, verify, exclude):
     """
     Return a list of all active critical and warning alerts
     """
     warning, critical = [], []
 
     for alert in get_api(url, session, "alerts", verify):
-        if alert['IsDismissed'] == False:
+        if alert['IsDismissed'] == False and alert['HelpIdentifier'] not in exclude:
             id = alert['HelpIdentifier']
             description = alert['Description']
             status = alert['Level']
@@ -99,8 +99,10 @@ def main():
     parser.add_argument('-p', '--password', type=str, required=True,
                         help='The password for the specified username')
     parser.add_argument('-m', '--mode', type=str, required=True,
-                        help='Valid modes are vpgs, alerts')                        
+                        help='Valid modes are vpgs, alerts')
     parser.add_argument('--no-verify', action='store_false', dest='verify', help='Disables certificate verification')
+    parser.add_argument('-e', '--exclude', default=['VRA0056','DRV0001'], nargs = '*', type=str,
+                        help='Alerts to exclude. Use the HelpIdentifier e.g. VRA0056')
 
     args = parser.parse_args()
 
@@ -119,20 +121,21 @@ def main():
                     .format(len(bad), len(bad)+len(good),', '.join(bad)))
                 exit(service_states.critical)
         elif args.mode == 'alerts':
-            result = check_alerts(args.url, session=session, verify=args.verify)
+            result = check_alerts(args.url, session=session, verify=args.verify, exclude=args.exclude)
             warning, critical = result
             output = ""
             exitcode = service_states.unknown
             if len(critical) == 0 and len(warning) == 0:
-                print("OK: No alerts reported.")
-                exit(service_states.ok)
+                output = "No alerts reported.</br>"
+                exitcode = service_states.ok
             elif len(warning) != 0:
                 output = "{0} warning alerts: </br>{1}</br>".format(len(warning), '</br>'.join(warning))
                 exitcode = service_states.warning
             if len(critical) != 0:
                 output = output + "{0} critical alerts:</br>{1}</br>".format(len(critical), '</br>'.join(critical))
                 exitcode = service_states.critical
-
+            if args.exclude:
+                output = output + "Alert IDs {0} and acknowledged alerts are excluded.</br>".format(' '.join(args.exclude))
             print("{0}: {1}".format(service_states(exitcode).name.upper(), output))
             exit(exitcode)
 
