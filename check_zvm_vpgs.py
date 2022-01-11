@@ -101,7 +101,7 @@ def main():
     parser.add_argument('-m', '--mode', type=str, required=True,
                         help='Valid modes are vpgs, alerts')
     parser.add_argument('--no-verify', action='store_false', dest='verify', help='Disables certificate verification')
-    parser.add_argument('-e', '--exclude', default=['VRA0056','DRV0001'], nargs = '*', type=str,
+    parser.add_argument('-e', '--exclude', default=['VRA0056','DRV0001','ZVM0011','VRA0059'], nargs = '*', type=str,
                         help='Alerts to exclude. Use the HelpIdentifier e.g. VRA0056')
 
     args = parser.parse_args()
